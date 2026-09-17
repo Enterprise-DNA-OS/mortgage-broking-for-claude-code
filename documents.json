@@ -1,11 +1,102 @@
 [
   {
-    "name": "example",
-    "title": "TODO(author): the first document this industry must produce",
-    "for_each": "select gen_random_uuid() as id, 'Example' as name",
+    "name": "refix-letter-draft",
+    "title": "Fixed rate expiry letter (draft)",
+    "for_each": "select b.loan_id as id, (b.loan_number || ' ' || b.client) as name from v_rollovers b where b.days_to_refix <= 100 order by b.fixed_until",
     "file": "name",
     "sections": [
-      { "title": "Details", "sql": "select 'replace me' as item, $1::text as record_id" }
+      {
+        "title": "This is a draft. Nobody has been sent anything.",
+        "note": "Read it, put the current rates in, and send it yourself. Rate options are a conversation and a record of advice, not a mail merge.",
+        "sql": "select b.client as addressed_to, b.adviser as from_whom, to_char(current_date, 'DD Month YYYY') as dated, b.lender, b.loan_number from v_loan_book b where b.loan_id = $1"
+      },
+      {
+        "title": "The loan reaching its expiry",
+        "sql": "select b.loan_number, b.lender, to_char(b.balance_cents / 100.0, 'FM$999,999,990') as balance, to_char(b.rate_bps / 100.0, 'FM990.00') || '%' as current_rate, to_char(b.fixed_until, 'DD Month YYYY') as fixed_until, case when b.days_to_refix < 0 then 'THIS RATE HAS ALREADY ENDED. The loan is on the floating rate now.' when b.days_to_refix <= 30 then b.days_to_refix || ' days away' else b.days_to_refix || ' days away' end as position, b.repayment from v_loan_book b where b.loan_id = $1"
+      },
+      {
+        "title": "The client's whole position",
+        "note": "Every loan they hold, so the conversation is about the structure, not one tranche.",
+        "sql": "select b2.loan_number, b2.lender, to_char(b2.balance_cents / 100.0, 'FM$999,999,990') as balance, to_char(b2.rate_bps / 100.0, 'FM990.00') || '%' as rate, b2.rate_type, coalesce(to_char(b2.fixed_until, 'DD Mon YYYY'), '') as fixed_until from v_loan_book b2 where b2.status = 'active' and b2.client_id = (select b3.client_id from v_loan_book b3 where b3.loan_id = $1) order by b2.fixed_until nulls last"
+      },
+      {
+        "title": "Recent contact",
+        "sql": "select to_char(cn.noted_on, 'DD Mon YYYY') as date, cn.channel, cn.note from contact_notes cn where cn.client_id = (select b.client_id from v_loan_book b where b.loan_id = $1) order by cn.noted_on desc limit 5"
+      }
+    ]
+  },
+  {
+    "name": "annual-review-summary",
+    "title": "Annual review summary",
+    "for_each": "select p.client_id as id, p.client as name from v_client_position p where p.status = 'active' and p.active_loans > 0 order by p.client",
+    "file": "name",
+    "sections": [
+      {
+        "title": "The client",
+        "sql": "select p.client, p.client_type as type, p.adviser, to_char(p.book_cents / 100.0, 'FM$999,999,990') as total_lending, p.active_loans as loans, coalesce(to_char(p.next_refix_on, 'DD Month YYYY'), 'no fixed expiry coming') as next_fixed_expiry, coalesce(to_char(p.last_contact_on, 'DD Month YYYY'), 'never') as last_contact, to_char(current_date, 'DD Month YYYY') as prepared_on from v_client_position p where p.client_id = $1"
+      },
+      {
+        "title": "The lending",
+        "sql": "select b.loan_number, b.lender, to_char(b.amount_cents / 100.0, 'FM$999,999,990') as original, to_char(b.balance_cents / 100.0, 'FM$999,999,990') as balance, to_char(b.rate_bps / 100.0, 'FM990.00') || '%' as rate, b.rate_type, coalesce(to_char(b.fixed_until, 'DD Mon YYYY'), '') as fixed_until, b.repayment, to_char(b.drawn_on, 'DD Mon YYYY') as drawn from v_loan_book b where b.client_id = $1 and b.status = 'active' order by b.balance_cents desc"
+      },
+      {
+        "title": "Deals in flight",
+        "sql": "select d.ref, d.purpose, coalesce(l.name, 'no lender yet') as lender, to_char(d.amount_cents / 100.0, 'FM$999,999,990') as amount, d.stage, to_char(d.opened_on, 'DD Mon YYYY') as opened from deals d left join lenders l on l.id = d.lender_id where d.client_id = $1 and d.stage not in ('settled', 'declined', 'withdrawn') order by d.opened_on desc"
+      },
+      {
+        "title": "The review record",
+        "note": "The ongoing service promised at settlement. An open row is a review still owed.",
+        "sql": "select r.kind, to_char(r.due_on, 'DD Mon YYYY') as due, coalesce(to_char(r.completed_on, 'DD Mon YYYY'), 'OPEN') as completed, coalesce(r.note, '') as note from reviews r where r.client_id = $1 order by r.due_on desc"
+      }
+    ]
+  },
+  {
+    "name": "settlement-summary",
+    "title": "Settlement summary",
+    "for_each": "select d.id, (d.ref || ' ' || c.name) as name from deals d join clients c on c.id = d.client_id where d.stage = 'settled' and d.settled_on >= current_date - 60 order by d.settled_on desc",
+    "file": "name",
+    "sections": [
+      {
+        "title": "The lending, confirmed",
+        "sql": "select c.name as client, coalesce(l.name, '') as lender, d.purpose, d.security_address as security, to_char(d.amount_cents / 100.0, 'FM$999,999,990') as amount, to_char(d.settled_on, 'DD Month YYYY') as settled, coalesce(a.full_name, '') as adviser from deals d join clients c on c.id = d.client_id left join lenders l on l.id = d.lender_id left join advisers a on a.id = d.adviser_id where d.id = $1"
+      },
+      {
+        "title": "The structure",
+        "note": "One row per loan part. The fixed until column is the date to put in the calendar.",
+        "sql": "select ln.loan_number, to_char(ln.amount_cents / 100.0, 'FM$999,999,990') as amount, to_char(ln.rate_bps / 100.0, 'FM990.00') || '%' as rate, ln.rate_type, coalesce(to_char(ln.fixed_until, 'DD Month YYYY'), '') as fixed_until, ln.term_months || ' months' as term, ln.repayment from loans ln where ln.deal_id = $1 order by ln.amount_cents desc"
+      },
+      {
+        "title": "How the deal ran",
+        "sql": "select to_char(e.noted_on, 'DD Mon YYYY') as date, e.event, coalesce(e.note, '') as note from deal_events e where e.deal_id = $1 order by e.noted_on"
+      },
+      {
+        "title": "The advice file",
+        "sql": "select ar.kind as record, case ar.status when 'missing' then 'MISSING' else ar.status end as status, coalesce(to_char(ar.done_on, 'DD Mon YYYY'), '') as done from advice_records ar where ar.deal_id = $1 order by ar.kind"
+      }
+    ]
+  },
+  {
+    "name": "adviser-week-report",
+    "title": "Adviser week report",
+    "for_each": "select a.id, a.full_name as name from advisers a where a.active order by a.full_name",
+    "file": "name",
+    "sections": [
+      {
+        "title": "The adviser",
+        "sql": "select a.full_name as adviser, a.role, coalesce(a.fsp_number, 'NO FSP NUMBER ON FILE') as fsp, to_char(current_date, 'DD Month YYYY') as prepared_on, (select count(*) from deals d where d.adviser_id = a.id and d.stage not in ('settled','declined','withdrawn')) as open_deals, to_char((select coalesce(sum(ln.balance_cents), 0) from loans ln where ln.adviser_id = a.id and ln.status = 'active') / 100.0, 'FM$999,999,990') as book from advisers a where a.id = $1"
+      },
+      {
+        "title": "Their pipeline",
+        "sql": "select d.ref, c.name as client, d.stage, (current_date - d.stage_since) as days_there, to_char(d.amount_cents / 100.0, 'FM$999,999,990') as amount, coalesce(l.name, '') as lender, coalesce(to_char(d.finance_due_on, 'YYYY-MM-DD'), '') as finance_due from deals d join clients c on c.id = d.client_id left join lenders l on l.id = d.lender_id where d.adviser_id = $1 and d.stage not in ('settled','declined','withdrawn') order by d.stage, d.stage_since"
+      },
+      {
+        "title": "Their refix book, next 90 days",
+        "sql": "select b.loan_number, b.client, b.lender, to_char(b.balance_cents / 100.0, 'FM$999,999,990') as balance, to_char(b.fixed_until, 'YYYY-MM-DD') as fixed_until, case when b.days_to_refix < 0 then 'LAPSED' else b.days_to_refix || ' days' end as expires, coalesce(to_char(b.last_contact_on, 'YYYY-MM-DD'), 'NEVER') as last_contact from v_rollovers b join advisers a on a.full_name = b.adviser where a.id = $1 and b.days_to_refix <= 90 order by b.fixed_until"
+      },
+      {
+        "title": "Their reviews open",
+        "sql": "select r.client, to_char(r.due_on, 'YYYY-MM-DD') as due, case when r.days_overdue > 0 then r.days_overdue || ' days overdue' else '' end as position, to_char(r.book_cents / 100.0, 'FM$999,999,990') as book from v_reviews_due r join advisers a on a.full_name = r.adviser where a.id = $1 and r.completed_on is null order by r.due_on"
+      }
     ]
   }
 ]

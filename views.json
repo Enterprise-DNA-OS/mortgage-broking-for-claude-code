@@ -1,13 +1,61 @@
 [
   {
     "name": "week",
-    "title": "This week",
-    "subtitle": "Mortgage Broking for Claude Code: what needs attention, rendered by npm run view",
+    "title": "The week",
+    "subtitle": "Mortgage Broking for Claude Code: the clocks, the refix book, the money and the file. Rendered by npm run view.",
     "sections": [
       {
-        "title": "Needs attention",
-        "note": "TODO(author): point this at the industry's attention view (overdue, stuck, quiet).",
-        "sql": "select 'replace me' as item, 'TODO(author)' as why"
+        "title": "Needs a decision",
+        "note": "Finance clauses, settlements, lapsed fixed rates, missing CDD, advice file gaps, commission owed. Worst first.",
+        "sql": "select case reason when 'finance_due' then 'Finance clause about to bite' when 'settlement_week' then 'Settlement this week' when 'refix_lapsed' then 'Fixed rate LAPSED' when 'cdd_missing' then 'No CDD on a submitted deal' when 'advice_gap' then 'Advice file incomplete' when 'clawback' then 'Clawback' when 'preapproval_expiring' then 'Pre-approval expiring' when 'application_quiet' then 'Application gone quiet' when 'upfront_unpaid' then 'Upfront not received' when 'commission_short' then 'Commission arrived short' when 'refix_due' then 'Refix due, client not contacted' when 'review_overdue' then 'Annual review overdue' when 'client_quiet' then 'Client gone quiet' when 'task_overdue' then 'Task overdue' else reason end as what, label as record, client, adviser, days, case when amount_cents > 0 then to_char(amount_cents / 100.0, 'FM$999,999,990') else '' end as value, detail from v_attention order by case reason when 'finance_due' then 1 when 'settlement_week' then 2 when 'refix_lapsed' then 3 when 'cdd_missing' then 4 when 'advice_gap' then 5 when 'clawback' then 6 when 'preapproval_expiring' then 7 when 'application_quiet' then 8 when 'upfront_unpaid' then 9 when 'commission_short' then 10 when 'refix_due' then 11 when 'review_overdue' then 12 when 'client_quiet' then 13 else 14 end, days desc nulls last"
+      },
+      {
+        "title": "The pipeline",
+        "note": "Every open deal. The finance column is the clause on the sale and purchase agreement; miss it and the deal dies.",
+        "sql": "select ref, client, stage, days_in_stage as days_there, to_char(amount_cents / 100.0, 'FM$999,999,990') as amount, lender, adviser, coalesce(to_char(finance_due_on, 'YYYY-MM-DD'), '') as finance_due, case when file_gaps > 0 then file_gaps || ' GAPS' else 'ok' end as advice_file from v_pipeline order by case stage when 'instructed' then 1 when 'unconditional' then 2 when 'conditional' then 3 when 'application' then 4 when 'pre-approval' then 5 when 'fact-find' then 6 else 7 end, days_in_stage desc"
+      },
+      {
+        "title": "The refix book, next 90 days",
+        "note": "Every fixed rate reaching its expiry. A lapsed one means the client is paying the floating rate today.",
+        "sql": "select loan_number as loan, client, lender, to_char(balance_cents / 100.0, 'FM$999,999,990') as balance, to_char(rate_bps / 100.0, 'FM990.00') || '%' as rate, to_char(fixed_until, 'YYYY-MM-DD') as fixed_until, case when days_to_refix < 0 then abs(days_to_refix) || ' days AGO' else days_to_refix || ' days' end as expires, adviser, coalesce(to_char(last_contact_on, 'YYYY-MM-DD'), 'NEVER') as last_contact, case when in_clawback_window then clawback_months_left || 'mo clawback left' else '' end as clawback from v_rollovers where days_to_refix <= 90 order by fixed_until"
+      },
+      {
+        "title": "Settlements",
+        "sql": "select ref, client, lender, to_char(amount_cents / 100.0, 'FM$999,999,990') as amount, case when settled_on is not null then 'settled ' || to_char(settled_on, 'YYYY-MM-DD') else to_char(settlement_on, 'YYYY-MM-DD') || ' (' || days_to_settlement || 'd)' end as settles, stage, adviser, case when file_gaps > 0 then file_gaps || ' GAPS' else 'ok' end as advice_file from v_settlements order by settled_on nulls first, settlement_on"
+      },
+      {
+        "title": "Reviews overdue",
+        "note": "The annual review is the ongoing service the client was promised.",
+        "sql": "select client, adviser, to_char(due_on, 'YYYY-MM-DD') as due, days_overdue || ' days' as overdue, to_char(book_cents / 100.0, 'FM$999,999,990') as book, coalesce(to_char(last_contact_on, 'YYYY-MM-DD'), 'never') as last_contact from v_reviews_due where completed_on is null and due_on < current_date order by days_overdue desc"
+      },
+      {
+        "title": "Commission owed",
+        "sql": "select loan_number as loan, client, lender, kind, to_char(expected_cents / 100.0, 'FM$999,999,990.00') as expected, days_since_drawn || ' days since drawdown' as waiting from v_commission_position where received_cents is null and kind in ('upfront', 'trail', 'refix fee') order by expected_cents desc"
+      }
+    ]
+  },
+  {
+    "name": "book",
+    "title": "The book",
+    "subtitle": "The loan book, the trail it earns, the clawback exposure and the panel. Rendered by npm run view.",
+    "sections": [
+      {
+        "title": "The loan book by lender",
+        "sql": "select b.lender, count(*) as loans, to_char(sum(b.balance_cents) / 100.0, 'FM$999,999,990') as book, to_char(round(sum(b.rate_bps::numeric * b.balance_cents) / nullif(sum(b.balance_cents), 0)) / 100.0, 'FM990.00') || '%' as avg_rate, to_char(coalesce(sum(b.trail_cents_per_year), 0) / 100.0, 'FM$999,990') as trail_per_year, count(*) filter (where b.rate_type = 'fixed' and b.fixed_until <= current_date + 90) as refix_90d from v_loan_book b where b.status = 'active' group by b.lender order by sum(b.balance_cents) desc"
+      },
+      {
+        "title": "Clawback exposure",
+        "note": "Straight-line estimate across each lender's window. The lender's own schedule governs.",
+        "sql": "select loan_number as loan, client, lender, to_char(drawn_on, 'YYYY-MM-DD') as drawn, months_on_book || ' of ' || clawback_months as month_of_window, to_char(upfront_received_cents / 100.0, 'FM$999,990') as upfront, case when status = 'active' then to_char(exposure_cents / 100.0, 'FM$999,990') else 'DISCHARGED ' || to_char(discharged_on, 'YYYY-MM-DD') end as at_risk, case when days_to_refix is not null and days_to_refix <= 90 then 'refix in ' || days_to_refix || 'd' else '' end as watch from v_clawback order by (status = 'discharged') desc, exposure_cents desc"
+      },
+      {
+        "title": "The whole book",
+        "sql": "select loan_number as loan, client, lender, to_char(balance_cents / 100.0, 'FM$999,999,990') as balance, to_char(rate_bps / 100.0, 'FM990.00') || '%' as rate, rate_type, coalesce(to_char(fixed_until, 'YYYY-MM-DD'), '') as fixed_until, repayment, adviser from v_loan_book where status = 'active' order by balance_cents desc"
+      },
+      {
+        "title": "The panel",
+        "note": "Commission terms are data. Your aggregator agreement is the source; keep this table matching it.",
+        "sql": "select l.name as lender, l.kind, to_char(l.upfront_rate_bps / 100.0, 'FM990.00') || '%' as upfront, case when l.trail_rate_bps > 0 then to_char(l.trail_rate_bps / 100.0, 'FM990.00') || '%' else '' end as trail, case when l.refix_fee_cents > 0 then to_char(l.refix_fee_cents / 100.0, 'FM$990') else '' end as refix_fee, l.clawback_months || ' months' as clawback_window, coalesce(l.turnaround_days || ' days', '') as turnaround, coalesce(l.bdm_name, '') as bdm from lenders l where l.active order by l.name"
       }
     ]
   }
