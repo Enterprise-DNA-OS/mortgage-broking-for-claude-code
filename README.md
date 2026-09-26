@@ -33,8 +33,8 @@
 <table align="center">
   <tr>
     <td align="center"><strong>Do it yourself</strong><br/>Clone it, run it, own it. Free, MIT.<br/><a href="#quick-start">Quick start</a></td>
-    <td align="center"><strong>We customise it</strong><br/>Your fields, your rules, a web front end if you want one, your Trail data brought across.<br/><a href="https://calendly.com/sam-mckay/discovery-call">Book a call</a></td>
-    <td align="center"><strong>We run it for you</strong><br/>Installed, connected and operated inside Omni. Setup fee, then a retainer.<br/><a href="https://enterprisedna.co/omni/instead-of/trail">How it works</a></td>
+    <td align="center"><strong>We customise it</strong><br/>Your fields, your rules, a web front end if you want one, your Trail data brought across.<br/><a href="https://calendly.com/sam-mckay/discovery-call?utm_source=github&utm_medium=readme&utm_campaign=trail">Book a call</a></td>
+    <td align="center"><strong>We run it for you</strong><br/>Installed, connected and operated inside Omni. Setup fee, then a retainer.<br/><a href="https://enterprisedna.co/omni/instead-of/trail?utm_source=github&utm_medium=readme&utm_campaign=trail">How it works</a></td>
   </tr>
 </table>
 
@@ -229,8 +229,8 @@ Issues and pull requests are welcome. Keep the shape: plain SQL, a small CLI, a 
 
 Enterprise DNA installs Mortgage Broking for Claude Code for your business, migrates your Trail data, connects it to the rest of your tools, and runs it for you as part of **Omni**, our managed Command Center. One setup fee, then a monthly retainer.
 
-- Book a call: https://calendly.com/sam-mckay/discovery-call
-- Read more: https://enterprisedna.co/omni/instead-of/trail
+- Book a call: https://calendly.com/sam-mckay/discovery-call?utm_source=github&utm_medium=readme&utm_campaign=trail
+- Read more: https://enterprisedna.co/omni/instead-of/trail?utm_source=github&utm_medium=readme&utm_campaign=trail
 
 ## License
 
