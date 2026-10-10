@@ -1,3 +1,7 @@
+<p align="center">
+  <img src=".github/assets/hero.png" alt="Mortgage Broking for Claude Code: open source, instead of Trail" width="100%" />
+</p>
+
 <h1 align="center">Mortgage Broking for Claude Code</h1>
 
 <p align="center">
@@ -9,6 +13,7 @@
 </p>
 
 <p align="center">
+  <a href="#see-it">See it</a> &bull;
   <a href="#what-is-this">What is this</a> &bull;
   <a href="#why-no-front-end">Why no front end</a> &bull;
   <a href="#quick-start">Quick start</a> &bull;
@@ -39,6 +44,25 @@
 </table>
 
 <p align="center">Works with Claude Code, Codex, OpenCode or Cursor (see <a href="AGENTS.md">AGENTS.md</a>).</p>
+
+## See it
+
+You ask in plain English. Claude Code runs the right command against your own database and answers. This is the demo firm, Harbourline Mortgages, straight after `npm run demo`:
+
+<p align="center">
+  <img src=".github/assets/session.png" alt="A Claude Code session: what needs my attention this week, then a drafted letter" width="100%" />
+</p>
+
+<table>
+  <tr>
+    <td width="58%"><img src=".github/assets/dashboard.png" alt="The week, as a read-only dashboard" /></td>
+    <td width="42%"><img src=".github/assets/document.png" alt="A fixed rate expiry letter" /></td>
+  </tr>
+  <tr>
+    <td align="center"><sub><code>npm run view</code>: the week as a dashboard, in your brand</sub></td>
+    <td align="center"><sub><code>npm run docs</code>: a fixed rate expiry letter, in your brand</sub></td>
+  </tr>
+</table>
 
 ## What is this
 
