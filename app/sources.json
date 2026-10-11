@@ -1,0 +1,19 @@
+{
+  "_": "What npm run app reads: each key is one CLI command run with --json. The app draws app/data.js from these.",
+  "cli": "scripts/mortgage.mjs",
+  "sources": {
+    "stats": ["stats"],
+    "attention": ["attention"],
+    "pipeline": ["pipeline"],
+    "rollovers": ["rollovers", "--days=150"],
+    "settlements": ["settlements"],
+    "commissions": ["commissions"],
+    "clawback": ["clawback"],
+    "compliance": ["compliance"],
+    "trailbook": ["trail-book"],
+    "book": ["book"],
+    "lenders": ["lenders"],
+    "advisers": ["advisers"],
+    "clients": ["clients"]
+  }
+}

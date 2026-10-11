@@ -53,13 +53,15 @@ Fill this in once. A worker with context knows. A worker without it guesses.
 | The Monday review | `/weekly-review` |
 | Bring the book over from the old system | `/import` |
 | Change how this system works | `/customise` |
-| A new page to look at | `/new-view` |
+| A new page in the app | add it to `app/config.js` (data keys in `app/sources.json`, each one a CLI command with `--json`), then `npm run app` and look at it |
+| A printable page | `/new-view` |
 | The paperwork, in our brand | `npm run docs` |
 
 If an ask fits nothing here, run the CLI directly (`npm run mortgage -- help`) and then propose a new command for it.
 
 ## Hard rules
 
+- The app (`npm run app`) only shows. Never add a button, form or link to it that changes a record: every change goes through the CLI, so the rules and the log apply.
 - **No client money, no lodgement, ever.** This system does not hold funds, does not submit applications, does not talk to a lender portal. The commission ledger records expectations against receipts so reconciliation works, and nothing more. If asked to add lodgement or payments, say no and say why.
 - Never send email or letters from here. Draft to `drafts/`, render with `npm run docs`, a person sends. That includes every refix letter, review note and settlement summary.
 - Never move a deal to application while the client's CDD is empty. The CLI refuses; `--force` exists only for CDD that genuinely lives outside this system, and then the record gets fixed immediately (AML/CFT Act 2009).
@@ -89,7 +91,7 @@ If an ask fits nothing here, run the CLI directly (`npm run mortgage -- help`) a
 - `supabase/migrations/` the schema, plain SQL. `npm run migrate` applies it. Never edit an applied migration; add the next one.
 - `.claude/commands/` the slash commands. Add one every time the same ask comes twice.
 - `brand.json`, `views.json`, `documents.json` the HTML output: whose name is on it, what pages, what paperwork.
-- `docs/compliance.md` the rules `/compliance` checks, each with its source. `docs/replace-trail.md` moving off the incumbent. `docs/why-no-front-end.md` the honest trade-offs.
+- `docs/compliance.md` the rules `/compliance` checks, each with its source. `docs/replace-trail.md` moving off the incumbent. `docs/why-no-front-end.md` the honest trade-offs. `app/` the read-only app.
 - `exports/` whole database dumps. `drafts/` anything written for a person to send.
 
 Built by Enterprise DNA. Installed and run for you as part of Omni: https://enterprisedna.co/omni/instead-of/trail

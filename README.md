@@ -15,7 +15,7 @@
 <p align="center">
   <a href="#see-it">See it</a> &bull;
   <a href="#what-is-this">What is this</a> &bull;
-  <a href="#why-no-front-end">Why no front end</a> &bull;
+  <a href="#screens-that-only-show">Screens that only show</a> &bull;
   <a href="#quick-start">Quick start</a> &bull;
   <a href="#the-commands">Commands</a> &bull;
   <a href="#compliance-checked-against-the-data">Compliance</a> &bull;
@@ -38,7 +38,7 @@
 <table align="center">
   <tr>
     <td align="center"><strong>Do it yourself</strong><br/>Clone it, run it, own it. Free, MIT.<br/><a href="#quick-start">Quick start</a></td>
-    <td align="center"><strong>We customise it</strong><br/>Your fields, your rules, a web front end if you want one, your Trail data brought across.<br/><a href="https://calendly.com/sam-mckay/discovery-call?utm_source=github&utm_medium=readme&utm_campaign=trail">Book a call</a></td>
+    <td align="center"><strong>We customise it</strong><br/>Your fields, your rules, screens your team can type into if you want them, your Trail data brought across.<br/><a href="https://calendly.com/sam-mckay/discovery-call?utm_source=github&utm_medium=readme&utm_campaign=trail">Book a call</a></td>
     <td align="center"><strong>We run it for you</strong><br/>Installed, connected and operated inside Omni. Setup fee, then a retainer.<br/><a href="https://enterprisedna.co/omni/instead-of/trail?utm_source=github&utm_medium=readme&utm_campaign=trail">How it works</a></td>
   </tr>
 </table>
@@ -47,26 +47,40 @@
 
 ## See it
 
-You ask in plain English. Claude Code runs the right command against your own database and answers. This is the demo firm, Harbourline Mortgages, straight after `npm run demo`:
+`npm run app` opens this over your own data. It only shows: every change is something you ask Claude Code for, in plain English. This is the demo firm, Harbourline Mortgages, straight after `npm run demo`.
+
+<p align="center">
+  <img src=".github/assets/app-today.png" alt="The app: this week at Harbourline Mortgages" width="100%" />
+</p>
+
+<table>
+  <tr>
+    <td width="50%"><img src=".github/assets/app-board.png" alt="The pipeline, with the finance clause and pre-approval clocks" /></td>
+    <td width="50%"><img src=".github/assets/app-timeline.png" alt="The refix book: every fixed rate reaching expiry" /></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>The pipeline, with the finance clause and pre-approval clocks</sub></td>
+    <td align="center"><sub>The refix book: every fixed rate reaching expiry</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src=".github/assets/app-client.png" alt="One client's whole file, a click away" /></td>
+    <td width="50%"><img src=".github/assets/app-compliance.png" alt="Compliance, checked against the records" /></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>One client's whole file, a click away</sub></td>
+    <td align="center"><sub>Compliance, checked against your own records</sub></td>
+  </tr>
+</table>
+
+Then you ask, and Claude does the work against the same database:
 
 <p align="center">
   <img src=".github/assets/session.png" alt="A Claude Code session: what needs my attention this week, then a drafted letter" width="100%" />
 </p>
 
-<table>
-  <tr>
-    <td width="58%"><img src=".github/assets/dashboard.png" alt="The week, as a read-only dashboard" /></td>
-    <td width="42%"><img src=".github/assets/document.png" alt="A fixed rate expiry letter" /></td>
-  </tr>
-  <tr>
-    <td align="center"><sub><code>npm run view</code>: the week as a dashboard, in your brand</sub></td>
-    <td align="center"><sub><code>npm run docs</code>: a fixed rate expiry letter, in your brand</sub></td>
-  </tr>
-</table>
-
 ## What is this
 
-Mortgage Broking for Claude Code does the job you pay Trail for, as a Postgres database and a set of Claude Code commands. There is no web front end. You open the folder in [Claude Code](https://claude.com/claude-code) and ask for what you want in plain language. It runs the right query, and it can answer questions the Trail dashboard cannot.
+Mortgage Broking for Claude Code does the job you pay Trail for, as a Postgres database and a set of Claude Code commands. `npm run app` gives you screens that show the whole business, and every change goes through Claude Code: you open the folder in [Claude Code](https://claude.com/claude-code) and ask for what you want in plain language. It runs the right query, and it can answer questions the Trail dashboard cannot.
 
 It is built for a mortgage advice business: the clients and the AML/CFT due diligence behind each one, the deal pipeline from lead to settlement with the finance clause clock on it, the advice file every deal must carry with each record citing its source, the loan book with its fixed rate expiry dates, the commission ledger (upfront, trail, refix fees, clawback), the lender panel with its real terms as data, and the annual review book. The words are the words an adviser already uses.
 
@@ -88,9 +102,11 @@ It is built for a mortgage advice business: the clients and the AML/CFT due dili
 
 One loan part is one row, because a settlement splits into tranches on different fixed terms, and each tranche reaches the refix book on its own date. That date is what the retention business runs on.
 
-## Why no front end
+## Screens that only show
 
-- The front end was only ever there because the database was hard to talk to. That is no longer true.
+- `npm run app` opens a read-only app: the week, the board, the dates, the money, compliance and every client. It never changes a record. Each page has an Ask Claude button with the questions worth asking about it.
+
+- The edit screens were only ever there because the database was hard to talk to. That is no longer true, so this has none: you ask, Claude changes the record, and the change is logged.
 - Your data sits in plain Postgres tables you own. Any tool can read them. No admin-gated export, no lock-in, no migration fee to leave.
 - No per-adviser licence, no custom report queue billed by the hour. Read [docs/why-no-front-end.md](docs/why-no-front-end.md) for the honest trade-offs too.
 
@@ -116,6 +132,14 @@ Then open the folder in Claude Code and type:
 Try `/pipeline`, `/rollovers`, `/client Whelan`, `/commissions`, `/compliance`, `/weekly-review`. When you are ready for real data, delete `.data/` and start with `/import`, or add clients one at a time with `add client`.
 
 Fill in the "Who this is for" block in [CLAUDE.md](CLAUDE.md) so drafts come out in your voice, put your business name and colours in [brand.json](brand.json) so the letters and reports carry your name, and put your aggregator's real commission terms into the lender panel so every expected payment computes right.
+
+### The app
+
+```bash
+npm run app
+```
+
+Reads the database through the same CLI the commands use and opens the app in your browser. Run it again for fresh numbers. Your data stays on your machine: `app/data.js` is ignored by git. Change a page in `app/config.js`, or ask Claude to ("add a page that shows each person their own week").
 
 ### Use it with your own Postgres or Supabase
 
@@ -229,6 +253,7 @@ mortgage-broking-for-claude-code/
   documents.json                         the paperwork npm run docs renders
   .claude/commands/                      the slash commands
   scripts/mortgage.mjs                   the CLI the commands drive
+  app/                                   the read-only app: pages in app/config.js, data from npm run app
   scripts/view.mjs                       read-only HTML dashboards from the SQL views
   scripts/docs.mjs                       the documents, one HTML file per record
   scripts/lib/db.mjs                     one adapter: DATABASE_URL (pg) or embedded PGlite
@@ -247,7 +272,7 @@ This repository was built with Claude Code as the primary development tool, from
 
 ## Contributing
 
-Issues and pull requests are welcome. Keep the shape: plain SQL, a small CLI, a slash command per recurring job, no front end, no client money, and nothing that submits to a lender.
+Issues and pull requests are welcome. Keep the shape: plain SQL, a small CLI, a slash command per recurring job, screens that only show, no client money, and nothing that submits to a lender.
 
 ## Want it installed and run for you?
 
